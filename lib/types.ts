@@ -143,3 +143,58 @@ export type Occasion = z.infer<typeof occasionSchema>;
 export type Measurements = z.infer<typeof measurementsSchema>;
 export type StylePreferences = z.infer<typeof stylePreferencesSchema>;
 export type Profile = z.infer<typeof profileSchema>;
+
+// --- Pure helpers (safe on server and client) ---------------------------
+
+/**
+ * The measurements required before we call /api/recommendations. A partial
+ * profile can still be saved; these gate the recommendations call only.
+ */
+export const REQUIRED_MEASUREMENT_KEYS = [
+  "bust",
+  "waist",
+  "hips",
+  "sizeRange",
+] as const satisfies readonly (keyof Measurements)[];
+
+export function createEmptyProfile(): Profile {
+  return {
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    unitSystem: "imperial",
+    measurements: {
+      bust: null,
+      underbust: null,
+      waist: null,
+      hips: null,
+      torsoLength: null,
+      inseam: null,
+      height: null,
+      braSize: null,
+      shoeSize: null,
+      shoeWidth: null,
+      sizeRange: null,
+    },
+    fitChallenges: [],
+    style: {
+      vibes: [],
+      silhouettes: [],
+      necklines: [],
+      colorPalette: [],
+      occasions: [],
+      avoid: [],
+    },
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function getMissingRequiredMeasurements(
+  profile: Profile,
+): (keyof Measurements)[] {
+  return REQUIRED_MEASUREMENT_KEYS.filter(
+    (key) => profile.measurements[key] == null,
+  );
+}
+
+export function isReadyForRecommendations(profile: Profile): boolean {
+  return getMissingRequiredMeasurements(profile).length === 0;
+}

@@ -9,69 +9,17 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  CURRENT_SCHEMA_VERSION,
-  profileSchema,
-  type Measurements,
-  type Profile,
+import { profileSchema, type Profile } from "./types";
+
+export {
+  REQUIRED_MEASUREMENT_KEYS,
+  createEmptyProfile,
+  getMissingRequiredMeasurements,
+  isReadyForRecommendations,
 } from "./types";
+import { createEmptyProfile } from "./types";
 
 export const PROFILE_STORAGE_KEY = "fit-first:profile";
-
-/**
- * The measurements required before we call /api/recommendations. A partial
- * profile can still be saved; these gate the API call only.
- */
-export const REQUIRED_MEASUREMENT_KEYS = [
-  "bust",
-  "waist",
-  "hips",
-  "sizeRange",
-] as const satisfies readonly (keyof Measurements)[];
-
-// --- Factory ------------------------------------------------------------
-
-export function createEmptyProfile(): Profile {
-  return {
-    schemaVersion: CURRENT_SCHEMA_VERSION,
-    unitSystem: "imperial",
-    measurements: {
-      bust: null,
-      underbust: null,
-      waist: null,
-      hips: null,
-      torsoLength: null,
-      inseam: null,
-      height: null,
-      braSize: null,
-      shoeSize: null,
-      shoeWidth: null,
-      sizeRange: null,
-    },
-    fitChallenges: [],
-    style: {
-      vibes: [],
-      silhouettes: [],
-      necklines: [],
-      colorPalette: [],
-      occasions: [],
-      avoid: [],
-    },
-    updatedAt: new Date().toISOString(),
-  };
-}
-
-export function getMissingRequiredMeasurements(
-  profile: Profile,
-): (keyof Measurements)[] {
-  return REQUIRED_MEASUREMENT_KEYS.filter(
-    (key) => profile.measurements[key] == null,
-  );
-}
-
-export function isReadyForRecommendations(profile: Profile): boolean {
-  return getMissingRequiredMeasurements(profile).length === 0;
-}
 
 // --- Storage ------------------------------------------------------------
 
