@@ -2,12 +2,14 @@ import { z } from "zod";
 
 /**
  * Single source of truth for the Fit First profile.
- * Types are derived from these schemas (see ./types.ts) so validation and
- * TypeScript never drift. This file is framework-agnostic and portable so the
- * future browser extension can reuse it directly.
+ * Types are inferred from these zod schemas so validation and TypeScript can
+ * never drift. This file is framework-agnostic and portable, so the future
+ * browser extension can reuse it directly. No React, no localStorage here.
  */
 
 export const CURRENT_SCHEMA_VERSION = 1 as const;
+
+// --- Enums --------------------------------------------------------------
 
 export const unitSystemSchema = z.enum(["imperial", "metric"]);
 
@@ -17,15 +19,6 @@ export const shoeWidthSchema = z.enum([
   "wide",
   "extra-wide",
 ]);
-
-export const sizeRangeSchema = z
-  .object({
-    min: z.number().int().nonnegative(),
-    max: z.number().int().nonnegative(),
-  })
-  .refine((r) => r.max >= r.min, {
-    message: "Size range max must be greater than or equal to min.",
-  });
 
 export const fitChallengeSchema = z.enum([
   "fuller-bust",
@@ -90,8 +83,20 @@ export const occasionSchema = z.enum([
   "travel",
 ]);
 
+// --- Composite shapes ---------------------------------------------------
+
+export const sizeRangeSchema = z
+  .object({
+    min: z.number().int().nonnegative(),
+    max: z.number().int().nonnegative(),
+  })
+  .refine((r) => r.max >= r.min, {
+    message: "Size range max must be greater than or equal to min.",
+  });
+
 const nullableNumber = z.number().positive().nullable();
 
+/** All measurements are nullable so a partial profile can be saved. */
 export const measurementsSchema = z.object({
   bust: nullableNumber,
   underbust: nullableNumber,
@@ -123,3 +128,18 @@ export const profileSchema = z.object({
   style: stylePreferencesSchema,
   updatedAt: z.string().datetime(),
 });
+
+// --- Inferred types -----------------------------------------------------
+
+export type UnitSystem = z.infer<typeof unitSystemSchema>;
+export type ShoeWidth = z.infer<typeof shoeWidthSchema>;
+export type SizeRange = z.infer<typeof sizeRangeSchema>;
+export type FitChallenge = z.infer<typeof fitChallengeSchema>;
+export type StyleVibe = z.infer<typeof styleVibeSchema>;
+export type Silhouette = z.infer<typeof silhouetteSchema>;
+export type Neckline = z.infer<typeof necklineSchema>;
+export type ColorPalette = z.infer<typeof colorPaletteSchema>;
+export type Occasion = z.infer<typeof occasionSchema>;
+export type Measurements = z.infer<typeof measurementsSchema>;
+export type StylePreferences = z.infer<typeof stylePreferencesSchema>;
+export type Profile = z.infer<typeof profileSchema>;
